@@ -51,7 +51,7 @@ This will:
 
 ```bash
 # Start any Exegol container
-exegol start my-pentest full
+exegol start my-pentest free
 
 # Your custom environment loads automatically (~10 seconds)
 # Prompt shows: Exegol ➜ ~ 𝘹
