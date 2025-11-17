@@ -38,7 +38,7 @@ layout {
                 command_pwd_rendermode  "dynamic"
                 
                 // tun0 IP address
-                command_ip_command      "~/.config/zellij/scripts/get-tun0-ip.sh"
+                command_ip_command      "bash ~/.config/zellij/scripts/get-tun0-ip.sh"
                 command_ip_interval     "5"
                 command_ip_format       "{stdout}"
                 command_ip_rendermode   "dynamic"
