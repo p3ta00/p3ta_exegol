@@ -105,6 +105,105 @@ alias help='tldr'
 alias ports='netstat -tulanp'
 
 # ───────────────────────────────────────────────────────────────────
+# ZSH HISTORY SHARING (for Zellij panes/tabs)
+# ───────────────────────────────────────────────────────────────────
+HISTFILE=~/.zsh_history           # History file location
+HISTSIZE=10000                    # Number of commands to remember in session
+SAVEHIST=10000                    # Number of commands to save to file
+setopt SHARE_HISTORY              # Share history between all sessions
+setopt INC_APPEND_HISTORY         # Write to history file immediately, not on shell exit
+setopt HIST_IGNORE_ALL_DUPS       # Delete old recorded entry if new entry is a duplicate
+setopt HIST_FIND_NO_DUPS          # Do not display duplicates when searching
+setopt HIST_REDUCE_BLANKS         # Remove superfluous blanks from history
+
+# ───────────────────────────────────────────────────────────────────
+# ENVIRONMENT VARIABLE SHARING (for Zellij panes/tabs)
+# ───────────────────────────────────────────────────────────────────
+
+# Shared environment file
+export SHARED_ENV_FILE="${HOME}/.shared_env"
+
+# Function to set and share environment variables across all Zellij panes
+setshared() {
+    if [ $# -eq 0 ]; then
+        echo "Usage: setshared VARIABLE=value"
+        echo "Example: setshared IP=10.4.10.100"
+        return 1
+    fi
+
+    local var_name="${1%%=*}"
+    local var_value="${1#*=}"
+
+    # Export in current shell
+    export "$var_name"="$var_value"
+
+    # Save to shared file (overwrite if exists)
+    if [ -f "$SHARED_ENV_FILE" ]; then
+        # Remove old entry for this variable
+        grep -v "^export ${var_name}=" "$SHARED_ENV_FILE" > "${SHARED_ENV_FILE}.tmp" 2>/dev/null || true
+        mv "${SHARED_ENV_FILE}.tmp" "$SHARED_ENV_FILE"
+    fi
+
+    # Append new entry
+    echo "export ${var_name}=\"${var_value}\"" >> "$SHARED_ENV_FILE"
+
+    echo "✓ Set and shared: ${var_name}=${var_value}"
+    echo "  Run 'loadshared' in other panes to import"
+}
+
+# Function to load shared environment variables
+loadshared() {
+    if [ -f "$SHARED_ENV_FILE" ]; then
+        source "$SHARED_ENV_FILE"
+        echo "✓ Loaded shared environment variables:"
+        cat "$SHARED_ENV_FILE" | sed 's/^export /  /'
+    else
+        echo "No shared environment file found"
+    fi
+}
+
+# Function to list shared variables
+listshared() {
+    if [ -f "$SHARED_ENV_FILE" ]; then
+        echo "Shared environment variables:"
+        cat "$SHARED_ENV_FILE" | sed 's/^export /  /'
+    else
+        echo "No shared environment variables set"
+    fi
+}
+
+# Function to clear all shared variables
+clearshared() {
+    if [ -f "$SHARED_ENV_FILE" ]; then
+        rm "$SHARED_ENV_FILE"
+        echo "✓ Cleared all shared environment variables"
+    else
+        echo "No shared environment file found"
+    fi
+}
+
+# Auto-load shared environment on shell start
+if [ -f "$SHARED_ENV_FILE" ]; then
+    source "$SHARED_ENV_FILE"
+fi
+
+# Auto-reload shared environment before each command (for real-time sync)
+autoload -Uz add-zsh-hook
+reload_shared_env() {
+    if [ -f "$SHARED_ENV_FILE" ]; then
+        source "$SHARED_ENV_FILE" 2>/dev/null
+    fi
+}
+add-zsh-hook precmd reload_shared_env
+
+# Convenient aliases for common pentesting variables
+alias setip='setshared IP='
+alias settarget='setshared TARGET='
+alias setdomain='setshared DOMAIN='
+alias setuser='setshared USER='
+alias setpass='setshared PASS='
+
+# ───────────────────────────────────────────────────────────────────
 # FUNCTIONS
 # ───────────────────────────────────────────────────────────────────
 
