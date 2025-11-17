@@ -163,10 +163,10 @@ fi
 # Copy Custom Tools to /opt/resources
 # ───────────────────────────────────────────────────────────────────
 
-if [ -f "$SETUP_DIR/copy_tools.sh" ]; then
-    echo -e "${BLUE}[*]${NC} Copying custom tools to /opt/resources..."
-    bash "$SETUP_DIR/copy_tools.sh"
-fi
+#if [ -f "$SETUP_DIR/copy_tools.sh" ]; then
+#   echo -e "${BLUE}[*]${NC} Copying custom tools to /opt/resources..."
+#    bash "$SETUP_DIR/copy_tools.sh"
+#fi
 
 # ───────────────────────────────────────────────────────────────────
 # Setup Impacket Prefix (Kali-style)
