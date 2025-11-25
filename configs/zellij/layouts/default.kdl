@@ -5,8 +5,8 @@ layout {
             plugin location="file:/root/.config/zellij/plugins/zjstatus.wasm" {
                 format_left   "{mode} #[fg=#7aa2f7,bold] {session} #[fg=#565f89]│ #[fg=#7dcfff] {command_pwd}"
                 format_center "{tabs}"
-                format_right  "#[fg=#7aa2f7]tun0: {command_ip} #[fg=#565f89]│ #[fg=#bb9af7] {datetime}"
-                
+                format_right  "#[fg=#7aa2f7]Network: {command_ip} #[fg=#565f89]│ #[fg=#f7768e]{command_listeners} #[fg=#565f89]│ #[fg=#bb9af7] {datetime}"
+
                 // Mode indicators with hints
                 mode_normal          "#[bg=#9ece6a,fg=#1a1b26,bold]  NORMAL "
                 mode_locked          "#[bg=#f7768e,fg=#1a1b26,bold]  CMD #[bg=#1a1b26,fg=#a9b1d6] c:tab n:→ m:↓ x:close z:zoom R:resize w:float hjkl:nav p/N:tab r:rename [:scroll d:detach"
@@ -21,7 +21,7 @@ layout {
                 mode_move            "#[bg=#7dcfff,fg=#1a1b26,bold]  MOVE #[bg=#1a1b26,fg=#a9b1d6] hjkl:move pane Esc/q:exit"
                 mode_session         "#[bg=#bb9af7,fg=#1a1b26,bold]  SESSION #[bg=#1a1b26,fg=#a9b1d6] d:detach Esc/q:exit"
                 mode_prompt          "#[bg=#7aa2f7,fg=#1a1b26,bold]  PROMPT "
-                
+
                 // Tab styling
                 tab_normal              "#[fg=#a9b1d6] {index}: {name} "
                 tab_normal_fullscreen   "#[fg=#a9b1d6] {index}: {name}  "
@@ -30,29 +30,35 @@ layout {
                 tab_active_fullscreen   "#[fg=#1a1b26,bg=#7aa2f7,bold] {index}: {name}  "
                 tab_active_sync         "#[fg=#1a1b26,bg=#7aa2f7,bold] {index}: {name}  "
                 tab_separator           "#[fg=#565f89]│"
-                
+
                 // Current working directory
                 command_pwd_command     "pwd | sed 's|^'$HOME'|~|' | awk -F'/' '{if (length($0) > 32) {if (NF>4) print $1\"/\"$2\"/…/\"$(NF-1)\"/\"$NF; else print $0} else print $0}'"
                 command_pwd_interval    "2"
                 command_pwd_format      "{stdout}"
                 command_pwd_rendermode  "dynamic"
-                
-                // tun0 IP address
-                command_ip_command      "bash ~/.config/zellij/scripts/get-tun0-ip.sh"
+
+                // Network interfaces (tun0, eth, wlan)
+                command_ip_command      "/root/.config/zellij/scripts/get-tun0-ip.sh"
                 command_ip_interval     "5"
                 command_ip_format       "{stdout}"
                 command_ip_rendermode   "dynamic"
-                
+
+                // Listener monitoring for CTF
+                command_listeners_command      "/root/.config/zellij/scripts/monitor-listeners.sh"
+                command_listeners_interval     "3"
+                command_listeners_format       "{stdout}"
+                command_listeners_rendermode   "dynamic"
+
                 // Date and time
                 datetime                "{format}"
                 datetime_format         "%H:%M"
                 datetime_timezone       "America/Los_Angeles"
-                
+
                 hide_frame_for_single_pane "false"
             }
         }
     }
-    
+
     tab name="main" focus=true {
         pane
     }

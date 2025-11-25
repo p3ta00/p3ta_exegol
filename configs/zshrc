@@ -108,13 +108,23 @@ alias ports='netstat -tulanp'
 # ZSH HISTORY SHARING (for Zellij panes/tabs)
 # ───────────────────────────────────────────────────────────────────
 HISTFILE=~/.zsh_history           # History file location
-HISTSIZE=10000                    # Number of commands to remember in session
-SAVEHIST=10000                    # Number of commands to save to file
+HISTSIZE=50000                    # Number of commands to remember in session
+SAVEHIST=50000                    # Number of commands to save to file
 setopt SHARE_HISTORY              # Share history between all sessions
 setopt INC_APPEND_HISTORY         # Write to history file immediately, not on shell exit
+setopt INC_APPEND_HISTORY_TIME    # Append with timestamps for better sync
 setopt HIST_IGNORE_ALL_DUPS       # Delete old recorded entry if new entry is a duplicate
 setopt HIST_FIND_NO_DUPS          # Do not display duplicates when searching
 setopt HIST_REDUCE_BLANKS         # Remove superfluous blanks from history
+setopt HIST_VERIFY                # Show command with history expansion before running
+setopt EXTENDED_HISTORY           # Record timestamp of command in HISTFILE
+
+# Force history reload before each command for real-time sync across panes
+autoload -Uz add-zsh-hook
+_sync_history() {
+    fc -RI  # Read history file and import new commands
+}
+add-zsh-hook precmd _sync_history
 
 # ───────────────────────────────────────────────────────────────────
 # ENVIRONMENT VARIABLE SHARING (for Zellij panes/tabs)
@@ -184,14 +194,19 @@ clearshared() {
 
 # Auto-load shared environment on shell start
 if [ -f "$SHARED_ENV_FILE" ]; then
-    source "$SHARED_ENV_FILE"
+    source "$SHARED_ENV_FILE" 2>/dev/null
 fi
 
 # Auto-reload shared environment before each command (for real-time sync)
-autoload -Uz add-zsh-hook
+# Uses file modification time to avoid unnecessary re-sourcing
+_last_env_mtime=0
 reload_shared_env() {
     if [ -f "$SHARED_ENV_FILE" ]; then
-        source "$SHARED_ENV_FILE" 2>/dev/null
+        local current_mtime=$(stat -c %Y "$SHARED_ENV_FILE" 2>/dev/null || stat -f %m "$SHARED_ENV_FILE" 2>/dev/null || echo 0)
+        if [ "$current_mtime" -gt "$_last_env_mtime" ]; then
+            source "$SHARED_ENV_FILE" 2>/dev/null
+            _last_env_mtime=$current_mtime
+        fi
     fi
 }
 add-zsh-hook precmd reload_shared_env

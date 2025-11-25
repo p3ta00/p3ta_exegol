@@ -1,135 +1,138 @@
-# Exegol Custom Environment Setup
+# P3ta Exegol Configuration
 
-Automated setup for custom tools and dotfiles in Exegol containers.
+Personal Exegol dotfiles and setup scripts for a customized pentesting environment.
+
+## Features
+
+- **Starship prompt** with Catppuccin Mocha theme and Exegol indicator
+- **Modern CLI tools**: eza, bat, fd, zoxide, delta
+- **Zellij** terminal multiplexer with custom config
+- **Shared environment variables** across Zellij panes
+
+## Quick Start
+
+### 1. Clone this repo
+
+```bash
+git clone https://github.com/yourusername/p3ta_exegol.git ~/dev/p3ta_exegol
+cd ~/dev/p3ta_exegol
+```
+
+### 2. Sync configs to Exegol my-resources
+
+```bash
+./setup-dotfiles.sh
+```
+
+This copies configs to `~/.exegol/my-resources/setup/`
+
+### 3. Start an Exegol container
+
+```bash
+exegol start mybox
+```
+
+### 4. Run the setup script (first time only)
+
+Inside the container:
+
+```bash
+/opt/my-resources/setup/load_user_setup.sh
+source ~/.zshrc
+```
+
+## Directory Structure
+
+```
+p3ta_exegol/
+├── configs/
+│   ├── starship.toml       # Starship prompt config
+│   ├── zshrc               # Custom zsh config (sourced by Exegol)
+│   ├── load_user_setup.sh  # Tool installer script
+│   └── zellij/             # Zellij terminal multiplexer config
+├── setup-dotfiles.sh       # Syncs configs to ~/.exegol/my-resources
+├── load_user_setup.sh      # Copy of tool installer
+└── README.md
+```
 
 ## What Gets Installed
 
-- **Starship** - Fast prompt with pink "Exegol" indicator
-- **Zellij** - Terminal multiplexer (Dracula theme)
-- **Eza** - Modern ls with icons
-- **Zoxide** - Smart cd replacement
-- **Bat** - Syntax-highlighted cat
-- **Fd** - Fast file finder
-- **Ripgrep** - Fast text search
-- **Git Delta** - Side-by-side git diffs
-- **Yazi** - Terminal file manager (Dracula theme)
-- **Impacket Prefix** - Kali-style `impacket-` prefixes for all 69 impacket tools
-- **Custom aliases & functions** - All your host dotfiles
+The `load_user_setup.sh` script installs:
 
-## How It Works
+| Tool | Description |
+|------|-------------|
+| starship | Modern shell prompt |
+| eza | Modern `ls` replacement |
+| bat | Modern `cat` replacement |
+| fd | Modern `find` replacement |
+| zoxide | Smarter `cd` command |
+| delta | Better git diffs |
+| zellij | Terminal multiplexer |
 
-1. **Host Side**: `~/.exegol/my-resources/` - Persistent storage
-   - `setup/` - Config files and scripts
-   - `bin/` - Precompiled binaries (auto-added to PATH)
-   - `tools/windows/` - Custom Windows tools
-   - `tools/linux/` - Custom Linux tools
+All tools are installed to `/opt/my-resources/bin/` which persists across container restarts.
 
-2. **Container Side**: Mounted at `/opt/my-resources/`
-   - `load_user_setup.sh` runs on container startup
-   - Installs all tools (~10 seconds)
-   - Copies custom tools to `/opt/resources/` (1745 files in 0.375s with rsync)
-   - Creates Kali-style `impacket-` prefixes (e.g., `impacket-secretsdump`, `impacket-psexec`)
-   - Sources your zshrc with all aliases
-
-3. **Custom Tools**: Stored in `my-resources/tools/` and automatically copied to `/opt/resources/` on startup
-
-## Installation
+## Custom Aliases
 
 ```bash
-git clone <your-repo-url>
-cd exegol
-./install.sh
+ls    # eza --icons
+ll    # eza -la --icons
+la    # eza -a --icons
+lt    # eza --tree --icons
+cat   # bat --style=plain
+catn  # bat (with line numbers)
 ```
 
-This will:
-- Set up `~/.exegol/my-resources/` directory structure
-- Copy all setup scripts and configs from the `configs/` directory
-- Configure Exegol to load your setup on container start
-- Tools will be downloaded on first container startup (~10 seconds)
-
-## Usage
+## Zellij Usage
 
 ```bash
-# Start any Exegol container
-exegol start my-pentest free
-
-# Your custom environment loads automatically (~10 seconds)
-# Prompt shows: Exegol ➜ ~ 𝘹
+zellij                    # Start zellij
+zellij attach             # Attach to existing session
+Ctrl+p n                  # New pane
+Ctrl+p x                  # Close pane
+Ctrl+t n                  # New tab
 ```
 
-## Adding Custom Tools
+## Shared Environment Variables
+
+Share variables across Zellij panes (defined in configs/zshrc):
 
 ```bash
-# Add Windows tools (executables, scripts)
-sudo cp tool.exe ~/.exegol/my-resources/tools/windows/
+setshared IP=10.10.10.1   # Set and share
+loadshared                # Load in other panes
+listshared                # List all shared vars
+clearshared               # Clear all
 
-# Add Linux tools (binaries, scripts)
-sudo cp linux_tool ~/.exegol/my-resources/tools/linux/
-
-# Tools automatically copied to /opt/resources/ on container startup
+# Shortcuts
+setip 10.10.10.1
+settarget dc01.domain.com
+setdomain domain.com
 ```
 
-## Impacket Tools - Kali-Style Prefix
+## Updating Configs
 
-All 69 impacket tools are automatically available with the `impacket-` prefix, just like Kali Linux:
+After making changes to configs:
 
 ```bash
-# Instead of:
-smbexec.py
-secretsdump.py
-psexec.py
-
-# Use:
-impacket-smbexec
-impacket-secretsdump
-impacket-psexec
-impacket-GetNPUsers
-impacket-wmiexec
-# ... and 64 more tools
+cd ~/dev/p3ta_exegol
+./setup-dotfiles.sh
 ```
 
-This happens automatically on container startup via `setup_impacket_prefix.sh`.
+Then restart your Exegol container or re-run the setup script.
 
-## Repository Structure
+## Troubleshooting
 
-```
-exegol/
-├── install.sh                  # Run this to install
-├── load_user_setup.sh          # Runs in containers (main script)
-├── copy_tools.sh               # Copies custom tools (rsync, 0.375s)
-├── setup_impacket_prefix.sh    # Creates impacket- prefixes (Kali-style)
-├── setup-dotfiles.sh           # Optional dotfiles sync
-└── configs/                    # Your configs (customize these!)
-    ├── zshrc                   # Shell aliases & functions
-    ├── starship.toml           # Prompt configuration
-    └── zellij/                 # Terminal multiplexer config
+### Starship not loading
+Run inside container:
+```bash
+/opt/my-resources/setup/load_user_setup.sh
+source ~/.zshrc
 ```
 
-## Installed Structure (Host)
-
-```
-~/.exegol/my-resources/
-├── bin/                           # Precompiled binaries (auto PATH)
-├── tools/
-│   ├── windows/                  # Windows tools → /opt/resources/windows/
-│   └── linux/                    # Linux tools → /opt/resources/linux/
-└── setup/
-    ├── load_user_setup.sh        # Runs on container startup
-    ├── copy_tools.sh             # Copies tools to /opt/resources/
-    ├── setup_impacket_prefix.sh  # Creates impacket- prefixes
-    ├── zsh/zshrc                 # Your custom aliases
-    ├── starship/                 # Prompt config
-    ├── yazi/                     # File manager config + Dracula theme
-    └── zellij/                   # Terminal multiplexer config
+### Tools not in PATH
+Add to your shell:
+```bash
+export PATH="/opt/my-resources/bin:$PATH"
 ```
 
-## Requirements
-
-- Exegol installed
-- Linux host system
-- curl, git, tar
-
-## Speed
-
-- First run: ~10 seconds (downloads precompiled binaries)
-- Subsequent runs: ~2 seconds (binaries cached)
+### Prompt looks wrong
+Make sure you're using a Nerd Font in your terminal.
