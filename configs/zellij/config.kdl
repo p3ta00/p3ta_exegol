@@ -250,6 +250,10 @@ plugins {
 // eg. "https://example.com/my-plugin.wasm"
 load_plugins {
 }
+
+// Auto-grant permissions to plugins (skip permission prompts)
+auto_accept_permissions true
+
 ui {
     pane_frames {
         rounded_corners true
